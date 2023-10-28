@@ -5,11 +5,11 @@ NULLABLE = {'null': True, 'blank': True}
 
 
 class Secret(models.Model):
-    hash = models.CharField(max_length=64, verbose_name='хэш')
+    code_phrase = models.CharField(max_length=64, verbose_name='хэш', **NULLABLE)
     ciphertext = models.TextField(verbose_name='зашифрованный текст')
-    link = models.CharField(max_length=250, verbose_name='ссылка')
+    link = models.CharField(max_length=250, verbose_name='ссылка', **NULLABLE)
     lifetime = models.PositiveSmallIntegerField(verbose_name='время жизни')
-    code_frase = models.BooleanField(default=True, **NULLABLE)
+    is_code_phrase = models.BooleanField(default=False)
 
     def __str__(self):
         return f'Секрет {self.pk}'
