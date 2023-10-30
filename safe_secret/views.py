@@ -1,11 +1,10 @@
 import secrets
-
 from rest_framework import generics, status
 from rest_framework.response import Response
-
 from safe_secret.models import Secret
 from safe_secret.serializers import SecretSerializer, SecretRetrieveSerializer
 from safe_secret.services import sha256_hash, Encryptor, make_link
+from django.utils import timezone
 
 
 class SecretCreateAPIViev(generics.CreateAPIView):
@@ -14,16 +13,23 @@ class SecretCreateAPIViev(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         secret = serializer.save()
+
         text = serializer.validated_data.get('ciphertext')
         secret.ciphertext = Encryptor().encrypt_text(text)
+
         code_phrase = serializer.validated_data.get('code_phrase')
         if code_phrase:
             secret.code_phrase = sha256_hash(code_phrase)
             secret.is_code_phrase = True
+        # генерируется случайная строка вместо хэша, если кодовая фраза не была задана
         else:
             secret.code_phrase = secrets.token_hex(32)
+
         link = make_link(secret.code_phrase)
         secret.link = link
+
+        secret.time_to_delete = timezone.now() + timezone.timedelta(minutes=secret.lifetime)
+
         secret.save()
 
     def create(self, request, *args, **kwargs):
