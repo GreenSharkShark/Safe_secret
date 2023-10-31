@@ -7,15 +7,15 @@ from safe_secret.services import sha256_hash, Encryptor, make_link
 from django.utils import timezone
 
 
-class SecretCreateAPIViev(generics.CreateAPIView):
+class SecretCreateAPIView(generics.CreateAPIView):
     serializer_class = SecretSerializer
     queryset = Secret.objects.all()
 
     def perform_create(self, serializer):
         secret = serializer.save()
 
-        text = serializer.validated_data.get('ciphertext')
-        secret.ciphertext = Encryptor().encrypt_text(text)
+        text = serializer.validated_data.get('secret_text')
+        secret.secret_text = Encryptor().encrypt_text(text)
 
         code_phrase = serializer.validated_data.get('code_phrase')
         if code_phrase:
@@ -57,8 +57,8 @@ class SecretRetrieveAPIView(generics.RetrieveAPIView):
             if hashed_phrase != secret.code_phrase:
                 return Response({'error': 'Неверная кодовая фраза'}, status=status.HTTP_400_BAD_REQUEST)
 
-        plaintext = Encryptor().decrypt_text(secret.ciphertext)
-        serializer = self.get_serializer(data={'ciphertext': plaintext})
+        plaintext = Encryptor().decrypt_text(secret.secret_text)
+        serializer = self.get_serializer(data={'secret_text': plaintext})
         serializer.is_valid(raise_exception=True)
 
         secret.delete()
