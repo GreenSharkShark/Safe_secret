@@ -64,3 +64,8 @@ class SecretRetrieveAPIView(generics.RetrieveAPIView):
         secret.delete()
 
         return Response(serializer.data)
+
+
+class SecrestDestroyAPIView(generics.DestroyAPIView):
+    queryset = Secret.objects.all()
+    lookup_field = 'code_phrase'
